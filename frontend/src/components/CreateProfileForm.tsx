@@ -24,7 +24,7 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { address: contractAddress, abi } = getContractConfig('MarketFactory', chain?.id)
+  const { address: contractAddress, abi } = getContractConfig('DeveloperProfile', chain?.id)
   
   const { 
     data: hash,
@@ -92,18 +92,25 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
       // In production, this would upload to IPFS
       const mockCID = `QmProfile${Date.now()}`
       
-      // Convert skill tags to bytes32[] format for smart contract
-      const skillTagsBytes32 = formData.skillTags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0)
-        .slice(0, 10) // Limit to 10 skills
-        .map(tag => {
-          // Convert string to bytes32 (simplified - in production use proper conversion)
-          const bytes = new TextEncoder().encode(tag.substring(0, 31))
-          const hex = '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').padEnd(64, '0')
-          return hex
-        })
+      // Create profile data object that includes all the information
+      const completeProfileData = {
+        githubHandle: formData.githubHandle.trim(),
+        bio: formData.bio || 'Developer on CoreDev Zero',
+        skillTags: formData.skillTags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
+        verificationData: githubData,
+        lastUpdated: Date.now()
+      }
+      
+      console.log('Creating profile with data:', completeProfileData)
+      console.log('Contract config:', { contractAddress, abi: abi ? 'ABI loaded' : 'ABI missing' })
+      
+      // Find and log the createProfile function from ABI
+      const createProfileFunction = abi?.find((item: any) => item.name === 'createProfile' && item.type === 'function')
+      console.log('createProfile function ABI:', createProfileFunction)
+      console.log('Expected inputs:', createProfileFunction?.inputs?.length || 'unknown')
+      
+      console.log('Function args:', [formData.githubHandle.trim(), mockCID])
+      console.log('Args length:', [formData.githubHandle.trim(), mockCID].length)
       
       writeContract({
         address: contractAddress,
@@ -111,9 +118,7 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
         functionName: 'createProfile',
         args: [
           formData.githubHandle.trim(),
-          mockCID,
-          skillTagsBytes32,
-          formData.bio || 'Developer on CoreDev Zero'
+          mockCID
         ],
       })
     } catch (err) {
