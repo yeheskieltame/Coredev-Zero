@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
-import Link from 'next/link'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { Header } from '@/components/Header'
 import { CreateProfileForm } from '@/components/CreateProfileForm'
 import { StakingOperations } from '@/components/StakingOperations'
 import { CreateMarketForm } from '@/components/CreateMarketForm'
@@ -37,26 +37,7 @@ export default function Actions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
       {/* Header */}
-      <header className="flex justify-between items-center p-6">
-        <div className="flex items-center space-x-3">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
-            <h1 className="text-white text-2xl font-bold">CoreDev Zero</h1>
-          </Link>
-        </div>
-        <div className="flex items-center space-x-4">
-          <nav className="hidden md:flex space-x-6">
-            <Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
-            <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">Dashboard</Link>
-            <Link href="/actions" className="text-cyan-400 font-semibold">Actions</Link>
-            <Link href="/markets" className="text-gray-300 hover:text-white transition-colors">Markets</Link>
-            <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors">Marketplace</Link>
-          </nav>
-          <ConnectButton />
-        </div>
-      </header>
+      <Header />
 
       <main className="px-4 py-8">
         <div className="max-w-6xl mx-auto">

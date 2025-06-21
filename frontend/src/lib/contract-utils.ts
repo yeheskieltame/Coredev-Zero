@@ -53,6 +53,23 @@ export function formatPercentage(value: number | bigint): string {
 }
 
 // Notification helpers
+export function showToast(type: 'success' | 'error' | 'info' | 'warning', message: string) {
+  switch (type) {
+    case 'success':
+      toast.success(message)
+      break
+    case 'error':
+      toast.error(message)
+      break
+    case 'info':
+      toast(message, { icon: 'ℹ️' })
+      break
+    case 'warning':
+      toast(message, { icon: '⚠️' })
+      break
+  }
+}
+
 export function showSuccess(message: string) {
   toast.success(message)
 }

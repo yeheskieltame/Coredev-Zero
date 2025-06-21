@@ -1,20 +1,12 @@
 'use client'
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Header } from '@/components/Header'
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
       {/* Header */}
-      <header className="flex justify-between items-center p-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">C</span>
-          </div>
-          <h1 className="text-white text-2xl font-bold">CoreDev Zero</h1>
-        </div>
-        <ConnectButton />
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <main className="flex flex-col items-center justify-center text-center px-4 py-20">
