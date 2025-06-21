@@ -1,0 +1,18 @@
+{
+  "network": "coreTestnet",
+  "chainId": "1114",
+  "deployer": "0x86979D26A14e17CF2E719dcB369d559f3ad41057",
+  "timestamp": "2025-06-21T03:00:07.156Z",
+  "contracts": {
+    "MockToken": "0x50d78be5877beeFf0cE7E79c031818ccD1167FAF",
+    "Testnet_sUSDT": "0x142f4d324D432641A067F1F39A6d6A90C3ab5A23",
+    "ReputationSBT": "0x2821932D3cccD1bD430757C3ed4b55e074Cb7425",
+    "DeveloperProfile": "0x91E0dEb48cDf97F1e72FE7aCc1DD22372A2D27CD",
+    "LoanPositionNFT": "0x37b6BB9915810D09Afc6B6e84bfcB04d569303c9",
+    "StakingVault": "0xB9bbc7F5E4B449574E81A2D6ac1FFf34f229F953",
+    "GitHubVerificationOracle": "0xF13d268970D29aacD53c4a5CA8420ce46F6755Ff",
+    "RiskAssessmentOracle": "0xa698384196600E0410738108D6EF71382173Ba8b",
+    "LoanPositionMarketplace": "0x38d457A5eFF3d27326069f4ee93db27B4D8E05a7",
+    "MarketFactory": "0x37163103264B0208707a295371C01c49aC20f5f4"
+  }
+}

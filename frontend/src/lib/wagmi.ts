@@ -35,18 +35,18 @@ export const coreDao = defineChain({
 
 // Core DAO Testnet Chain Definition  
 export const coreDaoTestnet = defineChain({
-  id: 1115,
+  id: 1114,
   name: 'Core DAO Testnet',
   nativeCurrency: {
     decimals: 18,
-    name: 'tCORE',
-    symbol: 'tCORE',
+    name: 'tCORE2',
+    symbol: 'tCORE2',
   },
   rpcUrls: {
-    default: { http: ['https://rpc.test.btcs.network'] },
+    default: { http: ['https://rpc.test2.btcs.network'] },
   },
   blockExplorers: {
-    default: { name: 'CoreScan Testnet', url: 'https://scan.test.btcs.network' },
+    default: { name: 'CoreScan Testnet', url: 'https://scan.test2.btcs.network' },
   },
   testnet: true,
 });

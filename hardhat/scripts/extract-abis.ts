@@ -27,6 +27,7 @@ const contracts = [
   { name: 'MarketFactory', path: 'MarketFactory.sol' },
   { name: 'Market', path: 'Market.sol' },
   { name: 'MockToken', path: 'tokens/MockToken.sol' },
+  { name: 'Testnet_sUSDT', path: 'tokens/Testnet_sUSDT.sol' },
   { name: 'GitHubVerificationOracle', path: 'oracles/GitHubVerificationOracle.sol' },
   { name: 'RiskAssessmentOracle', path: 'oracles/RiskAssessmentOracle.sol' },
   { name: 'ReputationSBT', path: 'tokens/ReputationSBT.sol' },
