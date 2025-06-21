@@ -125,7 +125,7 @@ export function DeveloperDashboard() {
               <span className="text-white">Profile Created</span>
             </div>
             
-            {profile && Array.isArray(profile) && (
+            {profile && Array.isArray(profile) && profile.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-300 text-sm">GitHub Username:</p>
@@ -136,7 +136,7 @@ export function DeveloperDashboard() {
                   <p className="text-white">{String(profile[2])}</p>
                 </div>
               </div>
-            )}
+            ) : null}
             
             {trustScore !== undefined && (
               <div>

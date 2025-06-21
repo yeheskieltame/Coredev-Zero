@@ -3,6 +3,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { MarketList } from '@/components/MarketList'
+import Link from 'next/link'
 
 export default function Markets() {
   const { isConnected } = useAccount()
@@ -12,19 +13,20 @@ export default function Markets() {
       {/* Header */}
       <header className="flex justify-between items-center p-6">
         <div className="flex items-center space-x-3">
-          <a href="/" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">C</span>
             </div>
             <h1 className="text-white text-2xl font-bold">CoreDev Zero</h1>
-          </a>
+          </Link>
         </div>
         <div className="flex items-center space-x-4">
           <nav className="hidden md:flex space-x-6">
-            <a href="/" className="text-gray-300 hover:text-white transition-colors">Home</a>
-            <a href="/dashboard" className="text-gray-300 hover:text-white transition-colors">Dashboard</a>
-            <a href="/actions" className="text-gray-300 hover:text-white transition-colors">Actions</a>
-            <a href="/markets" className="text-cyan-400 font-semibold">Markets</a>
+            <Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
+            <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">Dashboard</Link>
+            <Link href="/actions" className="text-gray-300 hover:text-white transition-colors">Actions</Link>
+            <Link href="/markets" className="text-cyan-400 font-semibold">Markets</Link>
+            <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors">Marketplace</Link>
           </nav>
           <ConnectButton />
         </div>

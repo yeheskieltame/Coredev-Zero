@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
+import Link from 'next/link'
 import { CreateProfileForm } from '@/components/CreateProfileForm'
 import { StakingOperations } from '@/components/StakingOperations'
 import { CreateMarketForm } from '@/components/CreateMarketForm'
 import { UpdateProfileForm } from '@/components/UpdateProfileForm'
 import { GitHubVerification } from '@/components/GitHubVerification'
 import { LenderBorrowerActions } from '@/components/LenderBorrowerActions'
+import { LoanPositionNFTs } from '@/components/LoanPositionNFTs'
 
-type ActiveTab = 'profile' | 'update-profile' | 'github' | 'staking' | 'market' | 'lending'
+type ActiveTab = 'profile' | 'update-profile' | 'github' | 'staking' | 'market' | 'lending' | 'nft'
 
 export default function Actions() {
   const { isConnected } = useAccount()
@@ -29,6 +31,7 @@ export default function Actions() {
     { id: 'staking' as ActiveTab, label: '🔒 Staking', description: 'Stake ETH as collateral for loans' },
     { id: 'market' as ActiveTab, label: '💰 Create Market', description: 'Create loan markets for your projects' },
     { id: 'lending' as ActiveTab, label: '💼 Lending & Borrowing', description: 'Manage loans and lending' },
+    { id: 'nft' as ActiveTab, label: '🎨 NFT Portfolio', description: 'View and manage your Loan Position NFTs' },
   ]
 
   return (
@@ -36,19 +39,20 @@ export default function Actions() {
       {/* Header */}
       <header className="flex justify-between items-center p-6">
         <div className="flex items-center space-x-3">
-          <a href="/" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">C</span>
             </div>
             <h1 className="text-white text-2xl font-bold">CoreDev Zero</h1>
-          </a>
+          </Link>
         </div>
         <div className="flex items-center space-x-4">
           <nav className="hidden md:flex space-x-6">
-            <a href="/" className="text-gray-300 hover:text-white transition-colors">Home</a>
-            <a href="/dashboard" className="text-gray-300 hover:text-white transition-colors">Dashboard</a>
-            <a href="/actions" className="text-cyan-400 font-semibold">Actions</a>
-            <a href="/markets" className="text-gray-300 hover:text-white transition-colors">Markets</a>
+            <Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
+            <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">Dashboard</Link>
+            <Link href="/actions" className="text-cyan-400 font-semibold">Actions</Link>
+            <Link href="/markets" className="text-gray-300 hover:text-white transition-colors">Markets</Link>
+            <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors">Marketplace</Link>
           </nav>
           <ConnectButton />
         </div>
@@ -113,6 +117,10 @@ export default function Actions() {
                 {activeTab === 'lending' && (
                   <LenderBorrowerActions onSuccess={handleSuccess} />
                 )}
+                
+                {activeTab === 'nft' && (
+                  <LoanPositionNFTs />
+                )}
               </div>
 
               {/* Phase 2 Progress */}
@@ -144,8 +152,20 @@ export default function Actions() {
                     <span className="text-green-400">Complete</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-300">⏳ Phase 3: Advanced Features</span>
-                    <span className="text-yellow-400">Ready to Start</span>
+                    <span className="text-gray-300">✅ Phase 3.1: NFT Integration</span>
+                    <span className="text-green-400">Complete</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">✅ Phase 3.2: NFT Marketplace</span>
+                    <span className="text-green-400">Complete</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">✅ Phase 3.3: Real-time Events</span>
+                    <span className="text-green-400">Complete</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">⏳ Phase 4: Advanced Features</span>
+                    <span className="text-yellow-400">Next Up</span>
                   </div>
                 </div>
               </div>

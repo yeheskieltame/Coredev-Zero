@@ -2,8 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
-import { formatEther, formatUnits } from 'viem'
+import { formatEther } from 'viem'
 import { getContractConfig } from '@/lib/contracts'
+
+// Utility functions
+const formatInterestRate = (rate: bigint): string => {
+  return `${(Number(rate) / 100).toFixed(2)}%`
+}
+
+const formatDuration = (duration: bigint): string => {
+  const days = Number(duration) / 86400 // Convert seconds to days
+  return `${Math.round(days)} days`
+}
 
 interface Market {
   id: string
@@ -306,7 +316,7 @@ function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
                   Fund This Market
                 </button>
                 <p className="text-gray-400 text-sm text-center">
-                  By funding this market, you'll lend {formatEther(market.amount)} ETH and earn {formatInterestRate(market.interestRate)} interest
+                  By funding this market, you&apos;ll lend {formatEther(market.amount)} ETH and earn {formatInterestRate(market.interestRate)} interest
                 </p>
               </div>
             </div>

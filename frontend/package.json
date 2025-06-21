@@ -11,9 +11,13 @@
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@tanstack/react-query": "^5.80.10",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.519.0",
     "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.5.2",
+    "recharts": "^2.15.4",
     "viem": "^2.31.3",
     "wagmi": "^2.15.6"
   },

@@ -16,7 +16,7 @@ export const CONTRACT_ADDRESSES = {
     LoanPositionMarketplace: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
   },
   // Core DAO Testnet
-  coreTestnet: {
+  coreTestnet2: {
     MarketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS,
     DeveloperProfile: process.env.NEXT_PUBLIC_DEVELOPER_PROFILE_ADDRESS,
     RiskAssessmentOracle: process.env.NEXT_PUBLIC_RISK_ASSESSMENT_ORACLE_ADDRESS,
@@ -76,8 +76,8 @@ export function getContractConfig(contractName: ContractName, chainId?: number) 
   
   // Determine network based on chainId
   switch (chainId) {
-    case 1115:
-      networkName = 'coreTestnet';
+    case 1114:
+      networkName = 'coreTestnet2';
       break;
     case 1116:
       networkName = 'coreMainnet';
@@ -108,7 +108,7 @@ export function getContractConfig(contractName: ContractName, chainId?: number) 
 export function getNetworkName(chainId: number): NetworkName {
   switch (chainId) {
     case 1115:
-      return 'coreTestnet';
+      return 'coreTestnet2';
     case 1116:
       return 'coreMainnet';
     case 11155111:
