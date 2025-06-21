@@ -1,16 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { parseUnits } from 'viem'
+import { parseUnits, formatEther } from 'viem'
 import { getContractConfig } from '@/lib/contracts'
+
+// Type definition for Profile struct from smart contract
+interface Profile {
+  githubHandle: string
+  profileDataCID: string
+  trustScore: bigint
+  completedProjects: bigint
+  successfulLoans: bigint
+  defaultedLoans: bigint
+  totalBorrowed: bigint
+  totalRepaid: bigint
+  isVerified: boolean
+  isActive: boolean
+  verificationTimestamp: bigint
+  lastActivityTimestamp: bigint
+}
 
 interface CreateMarketFormProps {
   onSuccess?: () => void
 }
 
 export function CreateMarketForm({ onSuccess }: CreateMarketFormProps) {
-  const { address, chain } = useAccount()
+  const { address, chain, isConnected } = useAccount()
   const [formData, setFormData] = useState({
     loanAmount: '',
     interestRate: '',
@@ -19,20 +35,63 @@ export function CreateMarketForm({ onSuccess }: CreateMarketFormProps) {
     projectDescription: '',
     fundingPurpose: ''
   })
+  const [requirements, setRequirements] = useState({
+    hasProfile: false,
+    hasStaking: false,
+    canCreateLoan: false,
+    loading: true
+  })
 
   const { address: contractAddress, abi } = getContractConfig('MarketFactory', chain?.id)
   
-  // Check if user can create loan
+  // Check user's profile
+  const { address: profileAddress, abi: profileAbi } = getContractConfig('DeveloperProfile', chain?.id)
+  const { data: profileData } = useReadContract({
+    address: profileAddress,
+    abi: profileAbi,
+    functionName: 'getDeveloperProfile',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!profileAddress,
+    },
+  })
+
+  // Check staking status
   const { address: stakingAddress, abi: stakingAbi } = getContractConfig('StakingVault', chain?.id)
+  const { data: stakeInfo } = useReadContract({
+    address: stakingAddress,
+    abi: stakingAbi,
+    functionName: 'getStakeInfo',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!stakingAddress,
+    },
+  })
+  
+  // Check if user can create loan
   const { data: canCreateLoan } = useReadContract({
     address: stakingAddress,
     abi: stakingAbi,
     functionName: 'canCreateLoan',
-    args: [address as `0x${string}`],
+    args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && !!stakingAddress,
     },
   })
+
+  // Update requirements status
+  useEffect(() => {
+    const profile = profileData as Profile | undefined
+    const hasProfile = profile && profile.githubHandle && profile.githubHandle.length > 0
+    const hasStaking = stakeInfo && Array.isArray(stakeInfo) && stakeInfo[0] && Number(stakeInfo[0]) >= 1000000000000000000 // >= 1 ETH in wei
+    
+    setRequirements({
+      hasProfile: !!hasProfile,
+      hasStaking: !!hasStaking,
+      canCreateLoan: !!canCreateLoan,
+      loading: false
+    })
+  }, [profileData, stakeInfo, canCreateLoan])
 
   const { 
     data: hash,
@@ -51,8 +110,8 @@ export function CreateMarketForm({ onSuccess }: CreateMarketFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!canCreateLoan) {
-      alert('You need to stake at least 1 ETH and have a verified profile to create markets')
+    if (!requirements.canCreateLoan) {
+      alert('You need to meet all requirements to create markets. Please check the requirements section below.')
       return
     }
 
@@ -77,6 +136,13 @@ export function CreateMarketForm({ onSuccess }: CreateMarketFormProps) {
       const loanAmountWei = parseUnits(formData.loanAmount, 6) // USDT has 6 decimals
       const interestRateBps = Math.round(parseFloat(formData.interestRate) * 100) // Convert % to basis points
       const tenorSeconds = parseInt(formData.tenorDays) * 24 * 60 * 60 // Convert days to seconds
+      
+      console.log('Creating market with params:', {
+        loanAmountWei: loanAmountWei.toString(),
+        interestRateBps,
+        tenorSeconds,
+        mockProjectCID
+      })
       
       writeContract({
         address: contractAddress,
@@ -107,26 +173,124 @@ export function CreateMarketForm({ onSuccess }: CreateMarketFormProps) {
     onSuccess?.()
   }
 
-  if (!canCreateLoan) {
+  if (!isConnected) {
+    return (
+      <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+        <h3 className="text-xl font-bold text-white mb-4">💰 Create Loan Market</h3>
+        <div className="text-center py-8">
+          <p className="text-gray-300 mb-4">Please connect your wallet to create loan markets.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (requirements.loading) {
+    return (
+      <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+        <h3 className="text-xl font-bold text-white mb-4">💰 Create Loan Market</h3>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="text-gray-300">Checking requirements...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show requirements if not all met
+  if (!requirements.canCreateLoan) {
+    const profile = profileData as Profile | undefined
+    const stakeAmount = stakeInfo && Array.isArray(stakeInfo) ? formatEther(stakeInfo[0] || BigInt(0)) : '0'
+    
     return (
       <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
         <h3 className="text-xl font-bold text-white mb-4">💰 Create Loan Market</h3>
         
-        <div className="p-6 bg-yellow-500/10 border border-yellow-400/20 rounded-lg text-center">
-          <div className="text-4xl mb-4">⚠️</div>
-          <h4 className="text-lg font-semibold text-yellow-300 mb-2">Prerequisites Not Met</h4>
-          <p className="text-yellow-200 mb-4">
-            To create loan markets, you need to:
-          </p>
-          <ul className="text-left text-yellow-200 space-y-2 mb-6">
-            <li>• ✅ Have a wallet connected</li>
-            <li>• ❓ Create a developer profile</li>
-            <li>• ❓ Stake at least 1.0 ETH as collateral</li>
-            <li>• ❓ Get GitHub verification (optional but recommended)</li>
-          </ul>
-          <p className="text-sm text-yellow-300">
-            Complete the steps above first, then return to create your loan market.
-          </p>
+        <div className="p-6 bg-yellow-500/10 border border-yellow-400/20 rounded-lg">
+          <div className="text-center mb-4">
+            <div className="text-4xl mb-2">⚠️</div>
+            <h4 className="text-lg font-semibold text-yellow-300 mb-2">Prerequisites Required</h4>
+            <p className="text-yellow-200 mb-4">
+              Complete all requirements below to create loan markets:
+            </p>
+          </div>
+          
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center space-x-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                isConnected ? 'bg-green-500' : 'bg-gray-500'
+              }`}>
+                {isConnected ? '✓' : '○'}
+              </div>
+              <span className={isConnected ? 'text-green-300' : 'text-gray-300'}>
+                Wallet Connected
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                requirements.hasProfile ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                {requirements.hasProfile ? '✓' : '✗'}
+              </div>
+              <span className={requirements.hasProfile ? 'text-green-300' : 'text-red-300'}>
+                Developer Profile Created
+                {profile && (
+                  <span className="text-xs text-gray-400 ml-2">
+                    ({profile.githubHandle})
+                  </span>
+                )}
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                requirements.hasStaking ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                {requirements.hasStaking ? '✓' : '✗'}
+              </div>
+              <span className={requirements.hasStaking ? 'text-green-300' : 'text-red-300'}>
+                Minimum 1.0 tCORE Staked
+                <span className="text-xs text-gray-400 ml-2">
+                  (Current: {stakeAmount} tCORE)
+                </span>
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                requirements.canCreateLoan ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                {requirements.canCreateLoan ? '✓' : '✗'}
+              </div>
+              <span className={requirements.canCreateLoan ? 'text-green-300' : 'text-red-300'}>
+                Available Stake for Loan Creation
+              </span>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-sm text-yellow-300 mb-4">
+              Complete the missing requirements using the other tabs in Actions page.
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {!requirements.hasProfile && (
+                <button
+                  onClick={() => window.location.href = '/actions?tab=profile'}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                >
+                  Create Profile
+                </button>
+              )}
+              {!requirements.hasStaking && (
+                <button
+                  onClick={() => window.location.href = '/actions?tab=staking'}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
+                >
+                  Stake tCORE
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -135,6 +299,19 @@ export function CreateMarketForm({ onSuccess }: CreateMarketFormProps) {
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
       <h3 className="text-xl font-bold text-white mb-4">💰 Create Loan Market</h3>
+      
+      {/* Requirements Status Badge */}
+      <div className="mb-6 p-4 bg-green-500/10 border border-green-400/20 rounded-lg">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            ✓
+          </div>
+          <span className="text-green-300 font-semibold">All Requirements Met</span>
+        </div>
+        <p className="text-green-200 text-sm">
+          You can create loan markets. Your stake will be locked until loan completion.
+        </p>
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Loan Details Section */}

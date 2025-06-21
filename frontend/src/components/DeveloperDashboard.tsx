@@ -11,6 +11,22 @@ import { showToast } from '@/lib/contract-utils'
 import { CreateProfileForm } from './CreateProfileForm'
 import { ChartArea, Upload, User, Coins, TrendingUp, Settings, Activity } from 'lucide-react'
 
+// Type definition for Profile struct from smart contract
+interface Profile {
+  githubHandle: string
+  profileDataCID: string
+  trustScore: bigint
+  completedProjects: bigint
+  successfulLoans: bigint
+  defaultedLoans: bigint
+  totalBorrowed: bigint
+  totalRepaid: bigint
+  isVerified: boolean
+  isActive: boolean
+  verificationTimestamp: bigint
+  lastActivityTimestamp: bigint
+}
+
 export function DeveloperDashboard() {
   const { address, isConnected, chain } = useAccount()
   const [isLoading, setIsLoading] = useState(false)
@@ -21,26 +37,17 @@ export function DeveloperDashboard() {
   const stakingVaultConfig = getContractConfig('StakingVault', chain?.id)
 
   // Contract read hooks
-  const { data: profileExists } = useReadContract({
+  const { data: profileData } = useReadContract({
     ...developerProfileConfig,
-    functionName: 'profileExists',
+    functionName: 'getDeveloperProfile',
     args: address ? [address] : undefined,
     query: { enabled: isConnected && !!address },
   })
 
-  const { data: profile } = useReadContract({
-    ...developerProfileConfig,
-    functionName: 'getProfile',
-    args: address ? [address] : undefined,
-    query: { enabled: isConnected && !!address && !!profileExists },
-  })
-
-  const { data: trustScore } = useReadContract({
-    ...developerProfileConfig,
-    functionName: 'getTrustScore',
-    args: address ? [address] : undefined,
-    query: { enabled: isConnected && !!address && !!profileExists },
-  })
+  // Type cast and check if profile exists
+  const profile = profileData as Profile | undefined
+  const profileExists = profile && profile.githubHandle && profile.githubHandle.length > 0
+  const trustScore = profile?.trustScore || BigInt(0)
 
   const { data: stakedAmount } = useReadContract({
     ...stakingVaultConfig,
@@ -148,18 +155,38 @@ export function DeveloperDashboard() {
                   <span className="text-white">Profile Created</span>
                 </div>
                 
-                {profile && Array.isArray(profile) && profile.length > 0 ? (
+                {profile && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-300 text-sm">GitHub Username:</p>
-                      <p className="text-white">{String(profile[0])}</p>
+                      <p className="text-gray-300 text-sm">GitHub Handle:</p>
+                      <p className="text-white">{profile.githubHandle}</p>
                     </div>
                     <div>
-                      <p className="text-gray-300 text-sm">Specialty:</p>
-                      <p className="text-white">{String(profile[2])}</p>
+                      <p className="text-gray-300 text-sm">Profile Data:</p>
+                      <p className="text-white font-mono text-xs">{profile.profileDataCID}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-300 text-sm">Completed Projects:</p>
+                      <p className="text-white">{Number(profile.completedProjects)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-300 text-sm">Successful Loans:</p>
+                      <p className="text-white">{Number(profile.successfulLoans)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-300 text-sm">Verification Status:</p>
+                      <p className={`${profile.isVerified ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {profile.isVerified ? 'Verified' : 'Unverified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-300 text-sm">Account Status:</p>
+                      <p className={`${profile.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                        {profile.isActive ? 'Active' : 'Inactive'}
+                      </p>
                     </div>
                   </div>
-                ) : null}
+                )}
                 
                 {trustScore !== undefined && (
                   <div>
