@@ -4,20 +4,10 @@ import { useState, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useBalance } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
 import { getContractConfig } from '@/lib/contracts'
+import { useMarkets, Market } from '@/hooks/useMarkets'
 
 interface LenderBorrowerActionsProps {
   onSuccess?: () => void
-}
-
-interface MarketData {
-  id: string
-  borrower: string
-  amount: bigint
-  interestRate: bigint
-  duration: bigint
-  projectName: string
-  isActive: boolean
-  isFunded: boolean
 }
 
 export function LenderBorrowerActions({ onSuccess }: LenderBorrowerActionsProps) {
@@ -27,7 +17,9 @@ export function LenderBorrowerActions({ onSuccess }: LenderBorrowerActionsProps)
   const [lendAmount, setLendAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null)
-  const [markets, setMarkets] = useState<MarketData[]>([])
+  
+  // Use shared markets hook
+  const { markets, loading: marketsLoading, useMockData } = useMarkets()
 
   // Get user's ETH balance
   const { data: ethBalance } = useBalance({
@@ -54,43 +46,6 @@ export function LenderBorrowerActions({ onSuccess }: LenderBorrowerActionsProps)
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   })
-
-  // Mock markets data (in real app, this would come from contract)
-  useEffect(() => {
-    const mockMarkets: MarketData[] = [
-      {
-        id: '1',
-        borrower: '0x1234567890123456789012345678901234567890',
-        amount: parseEther('5'),
-        interestRate: BigInt(1200), // 12%
-        duration: BigInt(180 * 24 * 60 * 60), // 180 days
-        projectName: 'DeFi Portfolio Tracker',
-        isActive: true,
-        isFunded: false,
-      },
-      {
-        id: '2',
-        borrower: '0x0987654321098765432109876543210987654321',
-        amount: parseEther('2'),
-        interestRate: BigInt(800), // 8%
-        duration: BigInt(90 * 24 * 60 * 60), // 90 days
-        projectName: 'NFT Marketplace',
-        isActive: true,
-        isFunded: false,
-      },
-      {
-        id: '3',
-        borrower: address || '',
-        amount: parseEther('3'),
-        interestRate: BigInt(1000), // 10%
-        duration: BigInt(120 * 24 * 60 * 60), // 120 days
-        projectName: 'My Project',
-        isActive: true,
-        isFunded: true,
-      },
-    ]
-    setMarkets(mockMarkets)
-  }, [address])
 
   // Handle success
   useEffect(() => {
@@ -282,8 +237,23 @@ export function LenderBorrowerActions({ onSuccess }: LenderBorrowerActionsProps)
       <div className="bg-white/5 border border-white/20 rounded-lg p-6">
         {activeTab === 'lend' && (
           <div>
-            <h3 className="text-xl font-bold text-white mb-4">💰 Lend to Markets</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">💰 Lend to Markets</h3>
+              <div className="text-sm">
+                {useMockData ? (
+                  <span className="text-yellow-400">🧪 Mock Data</span>
+                ) : (
+                  <span className="text-green-400">🌐 Live Data</span>
+                )}
+              </div>
+            </div>
             
+            {marketsLoading ? (
+              <div className="text-center py-8">
+                <div className="w-6 h-6 border-2 border-cyan-400/20 border-t-cyan-400 rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-gray-300">Loading markets...</p>
+              </div>
+            ) : (
             <form onSubmit={handleLendToMarket} className="space-y-4">
               {/* Market Selection */}
               <div>
@@ -335,6 +305,7 @@ export function LenderBorrowerActions({ onSuccess }: LenderBorrowerActionsProps)
                 {loading ? 'Processing...' : 'Lend ETH'}
               </button>
             </form>
+            )}
 
             {/* Available Markets */}
             <div className="mt-8">

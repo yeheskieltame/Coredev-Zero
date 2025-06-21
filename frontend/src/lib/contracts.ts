@@ -16,18 +16,18 @@ export const CONTRACT_ADDRESSES = {
     LoanPositionNFT: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
     LoanPositionMarketplace: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
   },
-  // Core DAO Testnet
-  coreTestnet2: {
-    MarketFactory: '0x37163103264B0208707a295371C01c49aC20f5f4',
-    DeveloperProfile: '0x91E0dEb48cDf97F1e72FE7aCc1DD22372A2D27CD',
-    RiskAssessmentOracle: '0xa698384196600E0410738108D6EF71382173Ba8b',
-    GitHubVerificationOracle: '0xF13d268970D29aacD53c4a5CA8420ce46F6755Ff',
-    MockUSDT: '0x50d78be5877beeFf0cE7E79c031818ccD1167FAF',
-    Testnet_sUSDT: '0x142f4d324D432641A067F1F39A6d6A90C3ab5A23',
-    ReputationSBT: '0x2821932D3cccD1bD430757C3ed4b55e074Cb7425',
-    StakingVault: '0xB9bbc7F5E4B449574E81A2D6ac1FFf34f229F953',
-    LoanPositionNFT: '0x37b6BB9915810D09Afc6B6e84bfcB04d569303c9',
-    LoanPositionMarketplace: '0x38d457A5eFF3d27326069f4ee93db27B4D8E05a7',
+  // Core DAO Testnet (Latest deployment)
+  coreTestnet: {
+    MarketFactory: '0x3C8a900a27b41bfa9e3698CF2dE38F6Ff95F8E2A', // MarketFactoryTesting with MIN_TRUST_SCORE = 100
+    DeveloperProfile: '0xb4CCB7879F4498367Fcd24F6AA6c38d81d23D838',
+    RiskAssessmentOracle: '0x82b0dA0e6F4c25b5514205C2fA383Aa213143f7e',
+    GitHubVerificationOracle: '0x3717A59Ae749Bc08AeE8aCd715CBBe5486D82fB0',
+    MockUSDT: '0xCC183A8D9953B323e77e2dB96131AF33388E9aE6',
+    Testnet_sUSDT: '0xCC183A8D9953B323e77e2dB96131AF33388E9aE6',
+    ReputationSBT: '0x5FE1C3fB5c45ccFcFf05F24A3f09321F32e3F6fa',
+    StakingVault: '0x7B0da467dC9D1D3E60bF1EcaF068D40Cf206D485',
+    LoanPositionNFT: '0x29c35a0079B27a72d038dd25332e5fef4b2Da875',
+    LoanPositionMarketplace: '0x1148b6cbD4eE448AcEF6F852e5521f1b482B93Dc',
   },
   // Core DAO Mainnet
   coreMainnet: {
@@ -80,7 +80,7 @@ export function getContractConfig(contractName: ContractName, chainId?: number) 
   // Determine network based on chainId
   switch (chainId) {
     case 1114:
-      networkName = 'coreTestnet2';
+      networkName = 'coreTestnet';
       break;
     case 1116:
       networkName = 'coreMainnet';
@@ -112,7 +112,7 @@ export function getContractConfig(contractName: ContractName, chainId?: number) 
 export function getNetworkName(chainId: number): NetworkName {
   switch (chainId) {
     case 1114:
-      return 'coreTestnet2';
+      return 'coreTestnet';
     case 1116:
       return 'coreMainnet';
     case 11155111:

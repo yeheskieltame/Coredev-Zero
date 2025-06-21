@@ -8,7 +8,7 @@
   "LoanPositionNFT": "0x29c35a0079B27a72d038dd25332e5fef4b2Da875",
   "LoanPositionMarketplace": "0x1148b6cbD4eE448AcEF6F852e5521f1b482B93Dc",
   "MarketFactory": "0xf3d3d915E9EbeA957f920797089B2C37B8245121",
+  "MarketFactoryTesting": "0x3C8a900a27b41bfa9e3698CF2dE38F6Ff95F8E2A",
   "deployer": "0x86979D26A14e17CF2E719dcB369d559f3ad41057",
-  "network": "localhost",
-  "MarketFactoryTesting": "0x3C8a900a27b41bfa9e3698CF2dE38F6Ff95F8E2A"
+  "network": "localhost"
 }
