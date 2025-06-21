@@ -8,11 +8,11 @@ import { AnalyticsDashboard } from './AnalyticsDashboard'
 import { IPFSUpload } from './IPFSUpload'
 import { PerformanceMonitor } from './PerformanceMonitor'
 import { showToast } from '@/lib/contract-utils'
+import { CreateProfileForm } from './CreateProfileForm'
 import { ChartArea, Upload, User, Coins, TrendingUp, Settings, Activity } from 'lucide-react'
 
 export function DeveloperDashboard() {
   const { address, isConnected, chain } = useAccount()
-  const [githubUsername, setGithubUsername] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'ipfs' | 'performance' | 'settings'>('overview')
 
@@ -50,40 +50,14 @@ export function DeveloperDashboard() {
   })
 
   // Contract write hooks
-  const { writeContract: createProfile, data: createProfileHash } = useWriteContract()
   const { writeContract: stakeEth, data: stakeHash } = useWriteContract()
 
   // Transaction status hooks
-  const { isLoading: isCreatingProfile } = useWaitForTransactionReceipt({
-    hash: createProfileHash,
-  })
-
   const { isLoading: isStaking } = useWaitForTransactionReceipt({
     hash: stakeHash,
   })
 
   // Handler functions
-  const handleCreateProfile = async () => {
-    if (!githubUsername.trim()) {
-      showToast('error', 'Please enter your GitHub username')
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      await createProfile({
-        ...developerProfileConfig,
-        functionName: 'createProfile',
-        args: [githubUsername, `Portfolio for ${githubUsername}`, 'Software Developer'],
-      })
-      showToast('success', 'Profile creation transaction submitted!')
-    } catch (error) {
-      console.error('Error creating profile:', error)
-      showToast('error', 'Failed to create profile')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleStakeEth = async () => {
     const amount = prompt('Enter amount of ETH to stake:')
@@ -106,12 +80,6 @@ export function DeveloperDashboard() {
   }
 
   // Use effect for transaction receipts
-  useEffect(() => {
-    if (createProfileHash) {
-      showToast('info', 'Creating profile... Please wait for confirmation.')
-    }
-  }, [createProfileHash])
-
   useEffect(() => {
     if (stakeHash) {
       showToast('info', 'Staking ETH... Please wait for confirmation.')
@@ -209,35 +177,12 @@ export function DeveloperDashboard() {
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                  <span className="text-white">No Profile Found</span>
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-gray-300 text-sm mb-2">
-                      GitHub Username:
-                    </label>
-                    <input
-                      type="text"
-                      value={githubUsername}
-                      onChange={(e) => setGithubUsername(e.target.value)}
-                      placeholder="Enter your GitHub username"
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
-                    />
-                  </div>
-                  
-                  <button
-                    onClick={handleCreateProfile}
-                    disabled={isLoading || isCreatingProfile}
-                    className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 disabled:opacity-50"
-                  >
-                    {isCreatingProfile ? 'Creating...' : 'Create Profile'}
-                  </button>
-                </div>
-              </div>
+              <CreateProfileForm 
+                onSuccess={() => {
+                  showToast('success', 'Profile created successfully!')
+                  // The profile data will be automatically refetched
+                }}
+              />
             )}
           </div>
 

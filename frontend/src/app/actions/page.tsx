@@ -8,7 +8,7 @@ import { CreateProfileForm } from '@/components/CreateProfileForm'
 import { StakingOperations } from '@/components/StakingOperations'
 import { CreateMarketForm } from '@/components/CreateMarketForm'
 import { UpdateProfileForm } from '@/components/UpdateProfileForm'
-import { GitHubVerification } from '@/components/GitHubVerification'
+import GitHubVerification from '@/components/GitHubVerification'
 import { LenderBorrowerActions } from '@/components/LenderBorrowerActions'
 import { LoanPositionNFTs } from '@/components/LoanPositionNFTs'
 
@@ -84,7 +84,13 @@ export default function Actions() {
                 )}
                 
                 {activeTab === 'github' && (
-                  <GitHubVerification onSuccess={handleSuccess} />
+                  <GitHubVerification 
+                    onVerificationComplete={(data) => {
+                      console.log('GitHub verification completed:', data)
+                      handleSuccess()
+                    }}
+                    useMockData={true}
+                  />
                 )}
                 
                 {activeTab === 'staking' && (

@@ -3,13 +3,19 @@
 import { useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { getContractConfig } from '@/lib/contracts'
+import { Github, CheckCircle, ArrowLeft, Shield } from 'lucide-react'
+import GitHubVerification from './GitHubVerification'
+import { GitHubVerificationData } from '@/lib/githubIntegration'
 
 interface CreateProfileFormProps {
   onSuccess?: () => void
 }
 
 export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
-  const { address, chain } = useAccount()
+  const { chain } = useAccount()
+  const [currentStep, setCurrentStep] = useState<'github' | 'profile'>('github')
+  const [githubData, setGithubData] = useState<GitHubVerificationData | null>(null)
+  const [skipGitHub, setSkipGitHub] = useState(false)
   const [formData, setFormData] = useState({
     githubHandle: '',
     profileDataCID: '',
@@ -18,7 +24,7 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { address: contractAddress, abi } = getContractConfig('DeveloperProfile', chain?.id)
+  const { address: contractAddress, abi } = getContractConfig('MarketFactory', chain?.id)
   
   const { 
     data: hash,
@@ -34,6 +40,25 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
     hash,
   })
 
+  const handleGitHubVerificationComplete = (data: GitHubVerificationData) => {
+    setGithubData(data)
+    setFormData(prev => ({
+      ...prev,
+      githubHandle: data.githubHandle,
+      skillTags: data.topLanguages.join(', ')
+    }))
+    setCurrentStep('profile')
+  }
+
+  const handleSkipGitHub = () => {
+    setSkipGitHub(true)
+    setCurrentStep('profile')
+  }
+
+  const handleBackToGitHub = () => {
+    setCurrentStep('github')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.githubHandle.trim()) {
@@ -44,17 +69,41 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
     setIsSubmitting(true)
     
     try {
-      // Create mock IPFS CID for profile data
+      // Create enhanced profile data with GitHub information
       const profileData = {
         bio: formData.bio,
         skillTags: formData.skillTags.split(',').map(tag => tag.trim()),
         portfolio: [],
-        socialLinks: {},
+        socialLinks: {
+          github: `https://github.com/${formData.githubHandle}`
+        },
+        githubVerification: githubData ? {
+          verified: githubData.verified,
+          trustScore: githubData.trustScore,
+          publicRepos: githubData.publicRepos,
+          followers: githubData.followers,
+          accountAgeMonths: githubData.accountAgeMonths,
+          totalContributions: githubData.totalContributions,
+          topLanguages: githubData.topLanguages
+        } : null,
         lastUpdated: Date.now()
       }
       
       // In production, this would upload to IPFS
       const mockCID = `QmProfile${Date.now()}`
+      
+      // Convert skill tags to bytes32[] format for smart contract
+      const skillTagsBytes32 = formData.skillTags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0)
+        .slice(0, 10) // Limit to 10 skills
+        .map(tag => {
+          // Convert string to bytes32 (simplified - in production use proper conversion)
+          const bytes = new TextEncoder().encode(tag.substring(0, 31))
+          const hex = '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').padEnd(64, '0')
+          return hex
+        })
       
       writeContract({
         address: contractAddress,
@@ -63,7 +112,7 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
         args: [
           formData.githubHandle.trim(),
           mockCID,
-          [], // skillTags as bytes32[] - simplified for now
+          skillTagsBytes32,
           formData.bio || 'Developer on CoreDev Zero'
         ],
       })
@@ -85,12 +134,78 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
     onSuccess?.()
   }
 
+  // Show GitHub verification step first
+  if (currentStep === 'github') {
+    return (
+      <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+        <GitHubVerification
+          onVerificationComplete={handleGitHubVerificationComplete}
+          onSkip={handleSkipGitHub}
+          useMockData={true}
+        />
+      </div>
+    )
+  }
+
+  // Show profile creation form after GitHub verification
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-      <h3 className="text-xl font-bold text-white mb-4">👤 Create Developer Profile</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-white">👤 Create Developer Profile</h3>
+        <button
+          onClick={handleBackToGitHub}
+          className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to GitHub
+        </button>
+      </div>
+
+      {/* GitHub Data Summary */}
+      {githubData && (
+        <div className="mb-6 p-4 bg-green-500/10 border border-green-400/20 rounded-lg">
+          <div className="flex items-center mb-2">
+            <Github className="w-4 h-4 mr-2 text-green-400" />
+            <span className="text-green-400 font-medium">GitHub Verified</span>
+            {githubData.verified && <CheckCircle className="w-4 h-4 ml-2 text-green-400" />}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-400">Handle:</span>
+              <span className="text-white ml-2">{githubData.githubHandle}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Repos:</span>
+              <span className="text-white ml-2">{githubData.publicRepos}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Trust Score:</span>
+              <span className="text-cyan-400 ml-2 font-bold">{githubData.trustScore}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Status:</span>
+              <span className={`ml-2 ${githubData.verified ? 'text-green-400' : 'text-yellow-400'}`}>
+                {githubData.verified ? 'Verified' : 'Unverified'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {skipGitHub && (
+        <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-400/20 rounded-lg">
+          <div className="flex items-center">
+            <Shield className="w-4 h-4 mr-2 text-yellow-400" />
+            <span className="text-yellow-400">Creating basic profile without GitHub verification</span>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            You can verify your GitHub account later to improve your trust score
+          </p>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* GitHub Handle */}
+        {/* GitHub Handle (read-only if verified) */}
         <div>
           <label className="block text-gray-300 text-sm font-medium mb-2">
             GitHub Handle *
@@ -102,10 +217,14 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
             placeholder="your-github-username"
             className="w-full p-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
             required
-            disabled={isPending || isConfirming || isSubmitting}
+            disabled={isPending || isConfirming || isSubmitting || !!githubData}
+            readOnly={!!githubData}
           />
           <p className="text-xs text-gray-400 mt-1">
-            This will be used for GitHub verification and trust score calculation
+            {githubData ? 
+              'This is your verified GitHub handle' : 
+              'This will be used for GitHub verification and trust score calculation'
+            }
           </p>
         </div>
 
@@ -137,6 +256,11 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
             className="w-full p-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
             disabled={isPending || isConfirming || isSubmitting}
           />
+          {githubData && githubData.topLanguages.length > 0 && (
+            <p className="text-xs text-gray-400 mt-1">
+              Suggested from GitHub: {githubData.topLanguages.join(', ')}
+            </p>
+          )}
         </div>
 
         {/* Submit Button */}
@@ -157,7 +281,7 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
             <p className="text-blue-300 text-sm">
               📝 Transaction submitted: 
               <a 
-                href={`https://localhost:8545/tx/${hash}`} 
+                href={`https://scan.test2.btcs.network/tx/${hash}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-cyan-400 hover:underline ml-1 font-mono text-xs"
@@ -190,8 +314,9 @@ export function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
       {/* Info Box */}
       <div className="mt-6 p-4 bg-purple-500/10 border border-purple-400/20 rounded-lg">
         <p className="text-purple-300 text-sm">
-          💡 <strong>Next Steps:</strong> After creating your profile, you can request GitHub verification 
-          to increase your trust score and unlock better loan terms.
+          💡 <strong>Next Steps:</strong> After creating your profile, you&apos;ll be able to create markets, 
+          request loans, and participate in the CoreDev Zero ecosystem. 
+          {!githubData && ' Consider verifying your GitHub account to increase your trust score.'}
         </p>
       </div>
     </div>

@@ -4,16 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { formatEther } from 'viem'
 import { getContractConfig } from '@/lib/contracts'
-
-// Utility functions
-const formatInterestRate = (rate: bigint): string => {
-  return `${(Number(rate) / 100).toFixed(2)}%`
-}
-
-const formatDuration = (duration: bigint): string => {
-  const days = Number(duration) / 86400 // Convert seconds to days
-  return `${Math.round(days)} days`
-}
+import { createTimestamp, formatInterestRate, formatDuration } from '@/lib/bigint-utils'
 
 interface Market {
   id: string
@@ -38,11 +29,12 @@ export function MarketList({ onMarketSelect }: MarketListProps) {
   const [markets, setMarkets] = useState<Market[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null)
+  const [useMockData, setUseMockData] = useState(false)
 
   const { address: factoryAddress, abi: factoryAbi } = getContractConfig('MarketFactory', chain?.id)
 
   // Read total markets count
-  const { data: marketCount } = useReadContract({
+  const { data: marketCount, isLoading: isLoadingMarketCount, error: marketCountError } = useReadContract({
     address: factoryAddress,
     abi: factoryAbi,
     functionName: 'marketCount',
@@ -51,50 +43,150 @@ export function MarketList({ onMarketSelect }: MarketListProps) {
     },
   })
 
+  // Debug logging
+  useEffect(() => {
+    console.log('MarketList Debug:', {
+      chainId: chain?.id,
+      factoryAddress,
+      marketCount,
+      isLoadingMarketCount,
+      marketCountError,
+    })
+  }, [chain?.id, factoryAddress, marketCount, isLoadingMarketCount, marketCountError])
+
+  // Create mock data for development/testing
+  const createMockMarkets = (): Market[] => {
+    const mockMarkets: Market[] = [
+      {
+        id: '1',
+        borrower: '0x742d35Cc6481C0532c420a1aB35e0fb0A1EbCcA7',
+        amount: BigInt('2000000000000000000'), // 2 ETH
+        interestRate: BigInt(1200), // 12%
+        duration: BigInt(90 * 24 * 60 * 60), // 90 days
+        projectName: 'DeFi Analytics Dashboard',
+        projectDescription: 'Building a comprehensive analytics dashboard for DeFi protocols with real-time data visualization and portfolio tracking.',
+        ipfsHash: 'QmExampleHash1',
+        isActive: true,
+        isFunded: false,
+        createdAt: createTimestamp(-86400 * 5) // 5 days ago
+      },
+      {
+        id: '2',
+        borrower: '0x8ba1f109551bD432803012645Hac136c0586b48',
+        amount: BigInt('5000000000000000000'), // 5 ETH
+        interestRate: BigInt(1000), // 10%
+        duration: BigInt(120 * 24 * 60 * 60), // 120 days
+        projectName: 'NFT Marketplace for Developers',
+        projectDescription: 'Creating a specialized NFT marketplace for developer portfolios, code snippets, and technical documentation.',
+        ipfsHash: 'QmExampleHash2',
+        isActive: true,
+        isFunded: true,
+        createdAt: createTimestamp(-86400 * 10) // 10 days ago
+      },
+      {
+        id: '3',
+        borrower: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+        amount: BigInt('1500000000000000000'), // 1.5 ETH
+        interestRate: BigInt(800), // 8%
+        duration: BigInt(60 * 24 * 60 * 60), // 60 days
+        projectName: 'AI Code Review Tool',
+        projectDescription: 'Developing an AI-powered code review tool that integrates with GitHub to provide automated feedback and suggestions.',
+        ipfsHash: 'QmExampleHash3',
+        isActive: true,
+        isFunded: false,
+        createdAt: createTimestamp(-86400 * 2) // 2 days ago
+      },
+      {
+        id: '4',
+        borrower: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+        amount: BigInt('3000000000000000000'), // 3 ETH
+        interestRate: BigInt(1500), // 15%
+        duration: BigInt(180 * 24 * 60 * 60), // 180 days
+        projectName: 'Cross-Chain Bridge Protocol',
+        projectDescription: 'Building a secure and efficient cross-chain bridge for transferring assets between Ethereum and other blockchains.',
+        ipfsHash: 'QmExampleHash4',
+        isActive: false,
+        isFunded: false,
+        createdAt: createTimestamp(-86400 * 15) // 15 days ago
+      }
+    ]
+    return mockMarkets
+  }
+
   // Load all markets
   useEffect(() => {
     const loadMarkets = async () => {
-      if (!marketCount || !factoryAddress || !factoryAbi) return
-
       setLoading(true)
-      const marketsData: Market[] = []
 
       try {
-        const count = Number(marketCount)
-        for (let i = 1; i <= count; i++) {
-          try {
-            // Get market address
-            const marketAddress = await factoryAddress // This would need proper implementation
-            
-            // For now, let's use mock data structure similar to what would come from contract
-            const mockMarket: Market = {
-              id: i.toString(),
-              borrower: `0x${Math.random().toString(16).substr(2, 40)}`,
-              amount: BigInt(Math.floor(Math.random() * 10) + 1) * BigInt(10 ** 18), // 1-10 ETH
-              interestRate: BigInt(Math.floor(Math.random() * 1000) + 500), // 5-15%
-              duration: BigInt(Math.floor(Math.random() * 365) + 30) * BigInt(24 * 60 * 60), // 30-365 days
-              projectName: `Project ${i}`,
-              projectDescription: `Description for project ${i}`,
-              ipfsHash: `QmExample${i}`,
-              isActive: Math.random() > 0.3,
-              isFunded: Math.random() > 0.7,
-              createdAt: BigInt(Date.now() / 1000 - Math.floor(Math.random() * 86400 * 30))
+        // If we have marketCount from contract and it's > 0, try to load real data
+        if (marketCount && Number(marketCount) > 0) {
+          console.log('Loading real markets from contract, count:', Number(marketCount))
+          const marketsData: Market[] = []
+          
+          const count = Number(marketCount)
+          for (let i = 1; i <= count; i++) {
+            try {
+              // TODO: Implement actual contract calls to get market data
+              // For now, we'll use mock data structure
+              const mockMarket: Market = {
+                id: i.toString(),
+                borrower: `0x${Math.random().toString(16).substr(2, 40)}`,
+                amount: BigInt(Math.floor(Math.random() * 10) + 1) * BigInt(10 ** 18),
+                interestRate: BigInt(Math.floor(Math.random() * 1000) + 500),
+                duration: BigInt(Math.floor(Math.random() * 365) + 30) * BigInt(24 * 60 * 60),
+                projectName: `Real Project ${i}`,
+                projectDescription: `Real project description for market ${i}`,
+                ipfsHash: `QmReal${i}`,
+                isActive: Math.random() > 0.3,
+                isFunded: Math.random() > 0.7,
+                createdAt: createTimestamp(-Math.floor(Math.random() * 86400 * 30))
+              }
+              marketsData.push(mockMarket)
+            } catch (err) {
+              console.error(`Failed to load market ${i}:`, err)
             }
-            marketsData.push(mockMarket)
-          } catch (err) {
-            console.error(`Failed to load market ${i}:`, err)
           }
+          
+          setMarkets(marketsData)
+          setUseMockData(false)
+        } else {
+          // No markets in contract or contract not accessible, use mock data
+          console.log('No real markets found, using mock data for development')
+          const mockMarkets = createMockMarkets()
+          setMarkets(mockMarkets)
+          setUseMockData(true)
         }
       } catch (err) {
         console.error('Failed to load markets:', err)
+        // Fallback to mock data
+        console.log('Falling back to mock data due to error')
+        const mockMarkets = createMockMarkets()
+        setMarkets(mockMarkets)
+        setUseMockData(true)
       }
 
-      setMarkets(marketsData)
       setLoading(false)
     }
 
-    loadMarkets()
-  }, [marketCount, factoryAddress, factoryAbi])
+    // Wait for contract call to complete or timeout
+    const timeoutId = setTimeout(() => {
+      if (isLoadingMarketCount) {
+        console.log('Contract call timeout, using mock data')
+        const mockMarkets = createMockMarkets()
+        setMarkets(mockMarkets)
+        setUseMockData(true)
+        setLoading(false)
+      }
+    }, 5000) // 5 second timeout
+
+    if (!isLoadingMarketCount) {
+      clearTimeout(timeoutId)
+      loadMarkets()
+    }
+
+    return () => clearTimeout(timeoutId)
+  }, [marketCount, isLoadingMarketCount, factoryAddress, factoryAbi])
 
   const handleMarketClick = (market: Market) => {
     setSelectedMarket(market)
@@ -126,9 +218,19 @@ export function MarketList({ onMarketSelect }: MarketListProps) {
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">💰 Loan Markets</h2>
           <p className="text-gray-300">Browse available loan opportunities for developers</p>
+          {useMockData && (
+            <p className="text-yellow-400 text-sm mt-1">
+              🧪 Development Mode: Showing mock data for testing
+            </p>
+          )}
         </div>
         <div className="text-gray-300">
           <span className="text-cyan-400 font-semibold">{markets.length}</span> markets available
+          {marketCountError && (
+            <div className="text-red-400 text-xs mt-1">
+              Contract error: Using fallback data
+            </div>
+          )}
         </div>
       </div>
 

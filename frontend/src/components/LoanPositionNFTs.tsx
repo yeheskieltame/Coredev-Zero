@@ -5,6 +5,7 @@ import { useAccount, useReadContracts, useWriteContract, useWaitForTransactionRe
 import { getContractConfig } from '@/lib/contracts'
 import { parseEther, formatEther } from 'viem'
 import { showSuccess, showError, showLoading } from '@/lib/contract-utils'
+import { daysFromNow } from '@/lib/bigint-utils'
 
 interface NFTPosition {
   tokenId: bigint
@@ -57,7 +58,7 @@ export function LoanPositionNFTs() {
           tokenId: BigInt(1),
           loanAmount: parseEther('1000'),
           interestRate: BigInt(1200), // 12.00%
-          repaymentDeadline: BigInt(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          repaymentDeadline: daysFromNow(30), // 30 days
           isActive: true,
           borrower: address || '',
           metadata: {
@@ -70,7 +71,7 @@ export function LoanPositionNFTs() {
           tokenId: BigInt(2),
           loanAmount: parseEther('1500'),
           interestRate: BigInt(1000), // 10.00%
-          repaymentDeadline: BigInt(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
+          repaymentDeadline: daysFromNow(15), // 15 days
           isActive: false,
           borrower: address || '',
           metadata: {
@@ -109,7 +110,7 @@ export function LoanPositionNFTs() {
             tokenId,
             loanAmount: parseEther((1000 + i * 500).toString()),
             interestRate: BigInt(1200 + i * 100), // 12.00% + i%
-            repaymentDeadline: BigInt(Date.now() + (30 - i * 5) * 24 * 60 * 60 * 1000),
+            repaymentDeadline: daysFromNow(30 - i * 5),
             isActive: i < 2, // First 2 are active
             borrower: address,
             metadata: {

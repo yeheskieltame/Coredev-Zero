@@ -5,6 +5,7 @@ import { useAccount, useReadContracts, useWriteContract, useWaitForTransactionRe
 import { getContractConfig } from '@/lib/contracts'
 import { parseEther, formatEther } from 'viem'
 import { showSuccess, showError, showLoading, updateToast } from '@/lib/contract-utils'
+import { daysFromNow } from '@/lib/bigint-utils'
 
 interface MarketplaceListing {
   listingId: bigint
@@ -68,7 +69,7 @@ export function NFTMarketplace() {
           isActive: listing.isActive !== false,
           loanAmount: BigInt(listing.loanAmount || parseEther((1000 + index * 300).toString())),
           interestRate: BigInt(listing.interestRate || (1200 + index * 300)),
-          repaymentDeadline: BigInt(listing.repaymentDeadline || Date.now() + (25 - index * 5) * 24 * 60 * 60 * 1000),
+          repaymentDeadline: BigInt(listing.repaymentDeadline || daysFromNow(25 - index * 5)),
           metadata: {
             name: `Real Listing #${index + 1}`,
             description: listing.description || `Contract-based loan position listing`
@@ -86,7 +87,7 @@ export function NFTMarketplace() {
             isActive: true,
             loanAmount: parseEther('1000'),
             interestRate: BigInt(1200), // 12%
-            repaymentDeadline: BigInt(Date.now() + 25 * 24 * 60 * 60 * 1000),
+            repaymentDeadline: daysFromNow(25),
             metadata: {
               name: 'High-Yield Dev Loan #1',
               description: 'Verified developer with 95+ trust score, 25 days remaining'
@@ -100,7 +101,7 @@ export function NFTMarketplace() {
             isActive: true,
             loanAmount: parseEther('1500'),
             interestRate: BigInt(1500), // 15%
-            repaymentDeadline: BigInt(Date.now() + 15 * 24 * 60 * 60 * 1000),
+            repaymentDeadline: daysFromNow(15),
             metadata: {
               name: 'Premium Dev Loan #5',
               description: 'Senior developer, GitHub verified, 15 days remaining'
@@ -114,7 +115,7 @@ export function NFTMarketplace() {
             isActive: true,
             loanAmount: parseEther('750'),
             interestRate: BigInt(1000), // 10%
-            repaymentDeadline: BigInt(Date.now() + 45 * 24 * 60 * 60 * 1000),
+            repaymentDeadline: daysFromNow(45),
             metadata: {
               name: 'Stable Dev Loan #8',
               description: 'Junior developer with strong portfolio, 45 days remaining'
