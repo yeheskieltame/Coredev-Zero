@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -40,9 +41,7 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: {
-      coreTestnet: process.env.CORE_SCAN_API_KEY || "",
-    },
+    apiKey: "7c7559b08c9744d7b918851b68352605",
     customChains: [
       {
         network: "coreTestnet",

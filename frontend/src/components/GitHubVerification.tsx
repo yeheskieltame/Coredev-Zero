@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Github, 
   CheckCircle, 
@@ -18,21 +18,58 @@ interface GitHubVerificationProps {
   onVerificationComplete?: (data: GitHubVerificationData) => void;
   onSkip?: () => void;
   initialUsername?: string;
-  useMockData?: boolean;
 }
 
 export default function GitHubVerification({ 
   onVerificationComplete, 
   onSkip, 
-  initialUsername = '',
-  useMockData = true // Set to true for development
+  initialUsername = ''
 }: GitHubVerificationProps) {
   const [username, setUsername] = useState(initialUsername);
   const [verificationData, setVerificationData] = useState<GitHubVerificationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const githubService = GitHubIntegrationService.getInstance();
+
+  // Check authentication state on component mount
+  useEffect(() => {
+    const checkAuthState = async () => {
+      // Initialize GitHub service
+      githubService.initialize();
+      
+      // Check if user is authenticated
+      const authenticated = githubService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      
+      // If authenticated, get user profile automatically
+      if (authenticated) {
+        setIsLoading(true);
+        try {
+          const user = await githubService.getUser();
+          if (user) {
+            setUsername(user.login);
+            // Auto-verify the authenticated user
+            const data = await githubService.verifyGitHubAccount(user.login);
+            setVerificationData(data);
+            
+            // Notify parent component
+            if (onVerificationComplete && data.verified) {
+              onVerificationComplete(data);
+            }
+          }
+        } catch (err) {
+          console.error('Error getting authenticated user:', err);
+          setError('Failed to get user profile');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    checkAuthState();
+  }, [githubService, onVerificationComplete]);
 
   const handleVerifyAccount = async () => {
     if (!username.trim()) {
@@ -44,15 +81,8 @@ export default function GitHubVerification({
     setError(null);
 
     try {
-      let data: GitHubVerificationData;
-      
-      if (useMockData) {
-        // Use mock data for development
-        data = await githubService.getVerificationDataMock(username);
-      } else {
-        // Use real GitHub API
-        data = await githubService.verifyGitHubAccount(username);
-      }
+      // Always use real GitHub API
+      const data = await githubService.verifyGitHubAccount(username);
       
       setVerificationData(data);
       
@@ -65,6 +95,36 @@ export default function GitHubVerification({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOAuthLogin = async () => {
+    try {
+      setError(null);
+      
+      // Store return URL for post-auth redirect
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('github_auth_return_url', window.location.pathname);
+      }
+      
+      const authUrl = await githubService.startOAuthFlow({
+        clientId: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || '',
+        redirectUri: `${window.location.origin}/auth/github/callback`,
+        scope: 'user:email read:user public_repo'
+      });
+      
+      // Redirect to GitHub OAuth
+      window.location.href = authUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start OAuth flow');
+    }
+  };
+
+  const handleLogout = () => {
+    githubService.logout();
+    setIsAuthenticated(false);
+    setVerificationData(null);
+    setUsername('');
+    setError(null);
   };
 
   const getTrustScoreColor = (score: number) => {
@@ -83,34 +143,85 @@ export default function GitHubVerification({
         
         <p className="text-gray-600 mb-6">
           Connect your GitHub account to build your developer profile and trust score.
-          <span className="block mt-2 text-sm text-blue-600">
-            🧪 Development Mode: Using mock data. Try usernames: testdev1, testdev2, newdev
+          <span className="block mt-2 text-sm text-green-600">
+            🌐 Real GitHub Integration: Choose OAuth login for secure authentication or manual verification
           </span>
         </p>
 
-        {/* Username Input */}
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            placeholder="Enter GitHub username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleVerifyAccount()}
-            disabled={isLoading}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button 
-            onClick={handleVerifyAccount}
-            disabled={isLoading || !username.trim()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              'Verify'
+        {/* Authenticated Status */}
+        {isAuthenticated && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-semibold text-green-900">
+                  Connected to GitHub
+                </span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-600 hover:text-red-800 underline"
+              >
+                Disconnect
+              </button>
+            </div>
+            {username && (
+              <p className="text-green-700 text-sm mt-2">
+                Authenticated as: <strong>@{username}</strong>
+              </p>
             )}
-          </button>
-        </div>
+          </div>
+        )}
+
+        {/* OAuth Login Option - Only show if not authenticated */}
+        {!isAuthenticated && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-900 mb-2">Recommended: OAuth Authentication</h3>
+            <p className="text-blue-700 text-sm mb-3">
+              Login with your GitHub account for secure authentication and automatic profile import.
+            </p>
+            <button
+              onClick={handleOAuthLogin}
+              disabled={isLoading}
+              className="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <Github className="w-4 h-4" />
+              {isLoading ? 'Processing...' : 'Login with GitHub'}
+            </button>
+          </div>
+        )}
+
+        {!isAuthenticated && (
+          <div className="text-center mb-4">
+            <span className="text-gray-500 text-sm">or manually verify by username</span>
+          </div>
+        )}
+
+        {/* Manual Username Input - Only show if not authenticated */}
+        {!isAuthenticated && (
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              placeholder="Enter GitHub username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleVerifyAccount()}
+              disabled={isLoading}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+              onClick={handleVerifyAccount}
+              disabled={isLoading || !username.trim()}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                'Verify'
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Error Display */}
         {error && (

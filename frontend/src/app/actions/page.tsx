@@ -89,7 +89,6 @@ export default function Actions() {
                       console.log('GitHub verification completed:', data)
                       handleSuccess()
                     }}
-                    useMockData={true}
                   />
                 )}
                 

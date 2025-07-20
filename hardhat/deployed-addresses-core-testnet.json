@@ -1,18 +1,23 @@
 {
-  "network": "coreTestnet",
-  "chainId": "1114",
+  "network": "Core DAO Testnet2",
+  "rpc": "https://rpc.test2.btcs.network",
+  "chainId": 1114,
+  "timestamp": "2025-07-20T03:20:04.187Z",
   "deployer": "0x86979D26A14e17CF2E719dcB369d559f3ad41057",
-  "timestamp": "2025-06-21T03:00:07.156Z",
+  "deployerBalance": "6.55282316",
   "contracts": {
-    "MockToken": "0x50d78be5877beeFf0cE7E79c031818ccD1167FAF",
-    "Testnet_sUSDT": "0x142f4d324D432641A067F1F39A6d6A90C3ab5A23",
-    "ReputationSBT": "0x2821932D3cccD1bD430757C3ed4b55e074Cb7425",
-    "DeveloperProfile": "0x91E0dEb48cDf97F1e72FE7aCc1DD22372A2D27CD",
-    "LoanPositionNFT": "0x37b6BB9915810D09Afc6B6e84bfcB04d569303c9",
-    "StakingVault": "0xB9bbc7F5E4B449574E81A2D6ac1FFf34f229F953",
-    "GitHubVerificationOracle": "0xF13d268970D29aacD53c4a5CA8420ce46F6755Ff",
-    "RiskAssessmentOracle": "0xa698384196600E0410738108D6EF71382173Ba8b",
-    "LoanPositionMarketplace": "0x38d457A5eFF3d27326069f4ee93db27B4D8E05a7",
-    "MarketFactory": "0x37163103264B0208707a295371C01c49aC20f5f4"
+    "DefaultBlacklist": "0x8E0E31D70267B0c7626DB329B7F0e07AaaD969a0",
+    "ReputationStaking": "0x6288eDb0AC3ee01D00DADBD39CeCf20b4f169863",
+    "CommunityVerification": "0xbDEb955301b97fdB5736ab85F721714b25A75D3d",
+    "MilestoneEscrowVault": "0xF8f81D2B039dC2863514De6473b2Fd6A38d0a399",
+    "MockToken": "0x4A975b6bdF2F484aDF427Eca00C31E800EdFb983",
+    "ReputationSBT": "0xF8465b6A953ABdb697df09778CdbC377039F14a0",
+    "StakingVault": "0x2Fa19daafd553c1eB631b42E9ffEb7D67c7B2e37",
+    "DeveloperProfile": "0x073d68B6B9eEE0B822915449Aea5A0c4c3450BC2",
+    "GitHubVerificationOracle": "0x01d6c9f06334625D3C1076B557f9371A137b6BcE",
+    "RiskAssessmentOracle": "0xED73D8F777F25590484135FE25cd59573BFC85be",
+    "MarketFactory": "0x651Bb2980717D2Ee8fB660CD3F1dFcEc4AF0645f",
+    "LoanPositionNFT": "0xfcf92bD970B4344a28a8d682A3ba91D2153c4F2E",
+    "LoanPositionMarketplace": "0xD547Cba92AC43eBC24886fF47CF83eB09A49e1C5"
   }
 }

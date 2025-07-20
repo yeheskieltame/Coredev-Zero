@@ -1,6 +1,14 @@
 # CoreDev Zero Frontend
 
-Frontend application untuk CoreDev Zero - Decentralized Developer Lending Protocol.
+**🚀 Production-Ready Frontend** for CoreDev Zero - Decentralized Developer Lending Protocol.
+
+## ✅ Current Status
+
+- **✅ Real Data Only**: All mock/development data modes removed
+- **✅ GitHub Integration**: Production OAuth flow with real GitHub API
+- **✅ Blockchain Integration**: Live market data from Core DAO Testnet
+- **✅ User Flows Complete**: Profile, Market, Lending, GitHub verification
+- **✅ Error Handling**: Comprehensive error management and user feedback
 
 ## 🚀 Tech Stack
 
@@ -10,6 +18,7 @@ Frontend application untuk CoreDev Zero - Decentralized Developer Lending Protoc
 - **Viem** - TypeScript interface untuk Ethereum
 - **TailwindCSS 4** - Utility-first CSS framework
 - **TypeScript** - Type safety
+- **GitHub API** - Real GitHub integration for developer verification
 
 ## 🏗️ Project Structure
 
@@ -28,6 +37,49 @@ src/
     ├── wagmi.ts          # Wagmi configuration + chains
     └── contracts.ts      # Smart contract ABIs & addresses
 ```
+
+## 🔧 Setup Requirements
+
+### 1. GitHub OAuth App Setup
+Create a GitHub OAuth app at [GitHub Developer Settings](https://github.com/settings/applications/new):
+- **Homepage URL**: `http://localhost:3000` (development) or your domain
+- **Callback URL**: `http://localhost:3000/auth/github/callback`
+
+### 2. Environment Variables
+
+Create `.env.local` with:
+
+```bash
+# GitHub OAuth (REQUIRED for GitHub integration)
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+NEXT_PUBLIC_GITHUB_CLIENT_ID=your_github_client_id
+
+# WalletConnect Project ID
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id_here
+
+# Network Configuration
+NEXT_PUBLIC_ENABLE_TESTNETS=true
+
+# Contract Addresses (Production-ready on Core DAO Testnet)
+NEXT_PUBLIC_MARKET_FACTORY_ADDRESS=0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+# ... etc
+```
+
+### 3. Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables (see above)
+cp .env.local.example .env.local
+
+# Start development server
+npm run dev
+```
+
+📖 **Detailed Setup Guide**: See [GITHUB_SETUP.md](./GITHUB_SETUP.md) for complete GitHub integration setup.
 
 ## 🔧 Configuration
 

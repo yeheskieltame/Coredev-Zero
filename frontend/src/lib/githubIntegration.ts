@@ -1,6 +1,12 @@
 /**
  * GitHub Integration Service for Frontend
  * Menangani koneksi dengan GitHub API dan verifikasi akun developer
+ * 
+ * PRODUCTION SETUP REQUIRED:
+ * 1. Create GitHub OAuth App at: https://github.com/settings/applications/new
+ * 2. Set environment variables: GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET
+ * 3. Configure proper redirect URI in your OAuth app settings
+ * 4. Ensure backend API endpoint /api/github/oauth/token is working
  */
 
 export interface GitHubUser {
@@ -244,64 +250,7 @@ export class GitHubIntegrationService {
     }
   }
 
-  /**
-   * Mock Mode for Development
-   */
-  async getVerificationDataMock(username: string): Promise<GitHubVerificationData> {
-    // Mock data untuk development - simulate real GitHub data
-    const mockUsers = {
-      'testdev1': {
-        verified: true,
-        githubHandle: 'testdev1',
-        publicRepos: 25,
-        followers: 45,
-        totalContributions: 1200,
-        accountAgeMonths: 36,
-        consistencyScore: 85,
-        trustScore: 220,
-        lastActivity: new Date().toISOString(),
-        topLanguages: ['TypeScript', 'JavaScript', 'Solidity', 'Python']
-      },
-      'testdev2': {
-        verified: true,
-        githubHandle: 'testdev2',
-        publicRepos: 15,
-        followers: 20,
-        totalContributions: 800,
-        accountAgeMonths: 24,
-        consistencyScore: 75,
-        trustScore: 180,
-        lastActivity: new Date().toISOString(),
-        topLanguages: ['JavaScript', 'React', 'Node.js', 'CSS']
-      },
-      'newdev': {
-        verified: false,
-        githubHandle: 'newdev',
-        publicRepos: 3,
-        followers: 2,
-        totalContributions: 50,
-        accountAgeMonths: 2,
-        consistencyScore: 30,
-        trustScore: 110,
-        lastActivity: new Date().toISOString(),
-        topLanguages: ['JavaScript']
-      }
-    };
 
-    return mockUsers[username as keyof typeof mockUsers] || {
-      verified: false,
-      githubHandle: username,
-      publicRepos: 0,
-      followers: 0,
-      totalContributions: 0,
-      accountAgeMonths: 0,
-      consistencyScore: 0,
-      trustScore: 100,
-      lastActivity: '',
-      topLanguages: [],
-      error: 'User not found in mock data'
-    };
-  }
 
   /**
    * Utility Methods
@@ -309,24 +258,23 @@ export class GitHubIntegrationService {
   private async exchangeCodeForToken(code: string): Promise<{ access_token?: string; error?: string }> {
     // Note: In production, this should be done on your backend server
     // GitHub doesn't allow CORS requests to their token endpoint
-    // This is just for demonstration - implement proper backend OAuth
     
     try {
-      // Mock token exchange for development
-      if (process.env.NODE_ENV === 'development') {
-        return { access_token: `gho_mock_token_${Date.now()}` };
-      }
-      
-      // In production, make request to your backend
+      // Make request to your backend for token exchange
       const response = await fetch('/api/github/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
       });
       
+      if (!response.ok) {
+        throw new Error('Token exchange request failed');
+      }
+      
       return await response.json();
     } catch (error) {
-      return { error: 'Token exchange failed' };
+      console.error('Token exchange error:', error);
+      return { error: 'Token exchange failed. Please ensure your backend OAuth endpoint is configured.' };
     }
   }
 
