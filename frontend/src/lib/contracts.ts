@@ -1,5 +1,5 @@
 // CoreDev Zero - Contract ABIs and Addresses
-// Generated: 2025-07-20T03:47:31.281Z
+// Generated: 2025-07-21T15:13:23.708Z
 // Network: Core DAO Testnet2 (Chain ID: 1114)
 
 export const NETWORK_CONFIG = {

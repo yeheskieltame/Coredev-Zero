@@ -55,7 +55,7 @@ async function main() {
                 bytecode: artifact.bytecode
             };
         } catch (error) {
-            console.log(`❌ Failed to extract ABI for ${contractName}:`, error.message);
+            console.log(`❌ Failed to extract ABI for ${contractName}:`, error instanceof Error ? error.message : String(error));
             return null;
         }
     }

@@ -6,8 +6,8 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "deploy": "npx hardhat run scripts/deploy-security-simple.ts",
-    "deploy:full": "npx hardhat run scripts/deploy-full-system.ts --network core-testnet2",
-    "export:abis": "npx hardhat run scripts/export-frontend-abis.ts --network core-testnet2",
+    "deploy:full": "npx hardhat run scripts/deploy-full-system.ts --network coreTestnet",
+    "export:abis": "npx hardhat run scripts/export-frontend-abis.ts --network coreTestnet",
     "deploy:export": "npm run deploy:full && npm run export:abis"
   },
   "keywords": [],
